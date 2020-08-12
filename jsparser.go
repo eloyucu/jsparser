@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"math"
+	"strconv"
+	"strings"
 	"unicode/utf16"
 )
 
@@ -81,6 +84,134 @@ func (j *JsonParser) Parse() []*JSON {
 
 }
 
+func (element *JSON) GetAllNodes(xpath string) map[string]*JSON {
+	var path, paths string
+	xpaths := strings.SplitN(xpath, ".", 2)
+	if len(xpaths) > 1 {
+		paths = xpaths[1]
+	}
+	path = xpaths[0]
+	if elementAux, ok := element.ObjectVals[path]; ok {
+		if element, ok = elementAux.(*JSON); !ok {
+			return map[string]*JSON{}
+		}
+	} else {
+		return map[string]*JSON{}
+	}
+
+	if len(xpaths) > 1 {
+		return element.GetAllNodes(paths)
+	}
+	return element.GetObjectVals()
+}
+func (element *JSON) GetNodes(xpath string) []JSON {
+	var path, paths string
+	xpaths := strings.SplitN(xpath, ".", 2)
+	if len(xpaths) > 1 {
+		paths = xpaths[1]
+	}
+	path = xpaths[0]
+	path, index := element.pathIndex(path)
+
+	elementAux := element.ObjectVals[path]
+	ok := false
+	element, ok = elementAux.(*JSON)
+	if ok {
+		if paths == "" {
+			return element.GetArrayVals(index)
+		}
+		return element.GetNodes(paths)
+	}
+	return []JSON{
+		{
+			StringVal: stringify(elementAux),
+			BoolVal:   false,
+			ValueType: 6,
+		},
+	}
+}
+func (element *JSON) GetNode(xpath string) JSON {
+	nodes := element.GetNodes(xpath)
+	return nodes[0]
+}
+func (element *JSON) GetValueF64(xpath string) float64 {
+	v := element.GetValue(xpath)
+	f := 0.00
+	if t, err := strconv.ParseFloat(v, 64); err == nil {
+		f = t
+	}
+	return f
+}
+func (element *JSON) GetValueInt(xpath string) int {
+	i := element.GetValueF64(xpath)
+	return int(i)
+}
+func (element *JSON) GetValue(xpath string) string {
+	if xpath == "." {
+		return element.StringVal
+	} else if xpath == "" {
+		return ""
+	}
+	node := element.GetNode(xpath)
+	return node.StringVal
+}
+func (element *JSON) GetObjectVals() map[string]*JSON {
+	nodes := map[string]*JSON{}
+	for key, value := range element.ObjectVals {
+		if node, ok := value.(*JSON); ok {
+			nodes[key] = node
+		} else {
+			nodes[key] = &JSON{
+				StringVal: stringify(value),
+				BoolVal:   false,
+				ValueType: 6,
+			}
+		}
+	}
+	return nodes
+}
+func (element *JSON) GetArrayVals(index int64) []JSON {
+	nodes := []JSON{}
+	for i, a := range element.ArrayVals {
+		if index == math.MaxInt64 || int64(i) == index {
+			if node, ok := a.(JSON); ok {
+				nodes = append(nodes, node)
+			} else {
+				nodes = append(nodes, JSON{
+					StringVal: stringify(a),
+					BoolVal:   false,
+					ValueType: 6,
+				})
+			}
+		}
+	}
+	return nodes
+}
+func stringify(i interface{}) string {
+	if s, ok := i.(string); ok {
+		return s
+	} else if b, ok := i.(bool); ok {
+		return strconv.FormatBool(b)
+	} else if n, ok := i.(float64); ok {
+		return strconv.FormatFloat(n, 'f', 6, 64)
+	} else if n, ok := i.(int); ok {
+		return strconv.Itoa(n)
+	}
+	return ""
+}
+func (element *JSON) pathIndex(path string) (string, int64) {
+	indexes := strings.Split(path, "[")
+	path = indexes[0]
+	if len(indexes) > 1 {
+		indexes := strings.Split(indexes[1], "]")
+		index, err := strconv.ParseInt(indexes[0], 10, 64)
+		if err != nil {
+			return path, math.MaxInt64
+		}
+		return path, index
+	}
+	return path, math.MaxInt64
+}
 func (j *JsonParser) parse() {
 
 	defer close(j.resChan)

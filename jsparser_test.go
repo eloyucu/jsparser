@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"flag"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -442,6 +443,127 @@ func TestInvalid(t *testing.T) {
 		index++
 	}
 
+}
+func alokd(s string) {
+
+}
+
+func TestGetAllNodes(t *testing.T) {
+	file, _ := os.Open("sample.json")
+	br := bufio.NewReader(file)
+	data, _ := ioutil.ReadAll(br)
+	dataStr := `{"data":` + string(data) + "}"
+	br = bufio.NewReaderSize(bytes.NewReader([]byte(dataStr)), 65536)
+	p := NewJSONParser(br, "data")
+
+	for json := range p.Stream() {
+		nodes := json.GetAllNodes("o.o7")
+		if len(nodes) != 4 {
+			t.Errorf("Lenght of json.GetAllNodes is not the expected \n\t Expected: %d \n\t Found: %d", 4, len(nodes))
+		} else {
+			values := map[string]string{"o71": "o71string", "o73": "true", "o74": "98"}
+			for key, expected := range values {
+				if nodes[key].GetValue(".") != expected {
+					t.Errorf("The value of the key %s doesn´t match with the expected \n\t Expected: %s \n\t Found: %s", key, expected, nodes[key].GetValue("."))
+				}
+			}
+		}
+	}
+}
+
+func TestGetValue(t *testing.T) {
+	var found, expected, path string
+
+	file, _ := os.Open("sample.json")
+	br := bufio.NewReader(file)
+	data, _ := ioutil.ReadAll(br)
+	dataStr := `{"data":` + string(data) + "}"
+	br = bufio.NewReaderSize(bytes.NewReader([]byte(dataStr)), 65536)
+	p := NewJSONParser(br, "data")
+
+	for json := range p.Stream() {
+		expected = ""
+		path = "nu"
+		found = json.GetValue(path)
+		if found != expected {
+			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+		}
+
+		expected = "o1string"
+		path = "o.o1"
+		found = json.GetValue(path)
+		if found != expected {
+			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+		}
+
+		expected = "true"
+		path = "o.o3"
+		found = json.GetValue(path)
+		if found != expected {
+			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+		}
+
+		expected = "98.21"
+		path = "o.o5"
+		found = json.GetValue(path)
+		if found != expected {
+			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+		}
+
+		expected = "98"
+		path = "o.o7.o74"
+		found = json.GetValue(path)
+		if found != expected {
+			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+		}
+
+		expected = "o71string"
+		path = "o.o7.o71"
+		found = json.GetValue(path)
+		if found != expected {
+			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+		}
+
+		expected = "false"
+		path = "o.o7.o72[2]"
+		found = json.GetValue(path)
+		if found != expected {
+			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+		}
+
+	}
+
+}
+
+func TestGetValueNumeric(t *testing.T) {
+	var i, expectedI int
+	var f, expectedF float64
+
+	file, _ := os.Open("sample.json")
+	br := bufio.NewReader(file)
+	data, _ := ioutil.ReadAll(br)
+	dataStr := `{"data":` + string(data) + "}"
+	br = bufio.NewReaderSize(bytes.NewReader([]byte(dataStr)), 65536)
+	p := NewJSONParser(br, "data")
+
+	for json := range p.Stream() {
+		i = json.GetValueInt("n")
+		expectedI = 2323
+		if i != expectedI {
+			t.Errorf("numeric.int doesn´t match with expected \n\t Expected: %d \n\t Found: %d", expectedI, i)
+		}
+		i = json.GetValueInt("o.o7.o74")
+		expectedI = 98
+		if i != expectedI {
+			t.Errorf("numeric.int doesn´t match with expected \n\t Expected: %d \n\t Found: %d", expectedI, i)
+		}
+
+		f = json.GetValueF64("n1")
+		expectedF = 23.23
+		if f != expectedF {
+			t.Errorf("numeric.float doesn´t match with expected \n\t Expected: %f \n\t Found: %f", expectedF, f)
+		}
+	}
 }
 
 func Benchmark1(b *testing.B) {
