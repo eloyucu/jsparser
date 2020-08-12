@@ -104,7 +104,7 @@ func (element *JSON) GetAllNodes(xpath string) map[string]*JSON {
 	}
 	return element.GetObjectVals()
 }
-func (element *JSON) GetNodes(xpath string) []JSON {
+func (element *JSON) GetNodes(xpath string) []*JSON {
 	var path, paths string
 	xpaths := strings.SplitN(xpath, ".", 2)
 	if len(xpaths) > 1 {
@@ -115,14 +115,24 @@ func (element *JSON) GetNodes(xpath string) []JSON {
 
 	elementAux := element.ObjectVals[path]
 	ok := false
-	element, ok = elementAux.(*JSON)
-	if ok {
+	if element, ok = elementAux.(*JSON); ok {
 		if paths == "" {
 			return element.GetArrayVals(index)
 		}
 		return element.GetNodes(paths)
+	} else if elements, ok := elementAux.([]*JSON); ok {
+		if paths == "" && index == 0 {
+			return elements
+		} else if paths == "" {
+			for i, e := range elements {
+				if i == int(index) {
+					return []*JSON{e}
+				}
+			}
+		}
+		return []*JSON{}
 	}
-	return []JSON{
+	return []*JSON{
 		{
 			StringVal: stringify(elementAux),
 			BoolVal:   false,
@@ -130,7 +140,7 @@ func (element *JSON) GetNodes(xpath string) []JSON {
 		},
 	}
 }
-func (element *JSON) GetNode(xpath string) JSON {
+func (element *JSON) GetNode(xpath string) *JSON {
 	nodes := element.GetNodes(xpath)
 	return nodes[0]
 }
@@ -153,7 +163,10 @@ func (element *JSON) GetValue(xpath string) string {
 		return ""
 	}
 	node := element.GetNode(xpath)
-	return node.StringVal
+	if node != nil {
+		return node.StringVal
+	}
+	return ""
 }
 func (element *JSON) GetObjectVals() map[string]*JSON {
 	nodes := map[string]*JSON{}
@@ -170,14 +183,14 @@ func (element *JSON) GetObjectVals() map[string]*JSON {
 	}
 	return nodes
 }
-func (element *JSON) GetArrayVals(index int64) []JSON {
-	nodes := []JSON{}
+func (element *JSON) GetArrayVals(index int64) []*JSON {
+	nodes := []*JSON{}
 	for i, a := range element.ArrayVals {
 		if index == math.MaxInt64 || int64(i) == index {
-			if node, ok := a.(JSON); ok {
+			if node, ok := a.(*JSON); ok {
 				nodes = append(nodes, node)
 			} else {
-				nodes = append(nodes, JSON{
+				nodes = append(nodes, &JSON{
 					StringVal: stringify(a),
 					BoolVal:   false,
 					ValueType: 6,
