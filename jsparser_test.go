@@ -472,6 +472,8 @@ func TestGetAllNodes(t *testing.T) {
 }
 
 func TestGetNode(t *testing.T) {
+	var expected, found, path string
+
 	file, _ := os.Open("sample.json")
 	br := bufio.NewReader(file)
 	data, _ := ioutil.ReadAll(br)
@@ -483,6 +485,27 @@ func TestGetNode(t *testing.T) {
 		node := json.GetNode("f.f1")
 		if node == nil {
 			t.Errorf("GetNode Node is nul")
+		} else {
+			path = "f11"
+			expected = "f11value"
+			found = node.GetValue(path)
+			if found != expected {
+				t.Errorf("GetNode %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+
+			}
+		}
+
+		node = json.GetNode("o.o1")
+		if node == nil {
+			t.Errorf("GetNode Node is nul")
+		} else {
+			path = "."
+			expected = "o1string"
+			found = node.GetValue(path)
+			if found != expected {
+				t.Errorf("GetNode %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+
+			}
 		}
 	}
 }
