@@ -114,12 +114,19 @@ func (element *JSON) GetNodes(xpath string) []*JSON {
 	path, index := element.pathIndex(path)
 
 	elementAux := element.ObjectVals[path]
-	ok := false
-	if element, ok = elementAux.(*JSON); ok {
+	if e, ok := elementAux.(*JSON); ok {
 		if paths == "" {
-			return element.GetArrayVals(index)
+			return e.GetArrayVals(index)
+		} else {
+			for i, eArr := range e.ArrayVals {
+				if i == int(index) {
+					if eAux, ok := eArr.(*JSON); ok {
+						return eAux.GetNodes(paths)
+					}
+				}
+			}
 		}
-		return element.GetNodes(paths)
+		return e.GetNodes(paths)
 	} else if elements, ok := elementAux.([]*JSON); ok {
 		if paths == "" && index == 0 {
 			return elements
@@ -131,6 +138,36 @@ func (element *JSON) GetNodes(xpath string) []*JSON {
 			}
 		}
 		return []*JSON{}
+	} else if path != "" {
+		for _, e := range element.ArrayVals {
+			if element, ok = e.(*JSON); ok {
+				elementAux = element.ObjectVals[path]
+				if element, ok = elementAux.(*JSON); ok {
+					if paths == "" {
+						return []*JSON{element}
+					}
+					return element.GetNodes(paths)
+				} else if elements, ok := elementAux.([]*JSON); ok {
+					if paths == "" && index == 0 {
+						return elements
+					} else if paths == "" {
+						for i, e := range elements {
+							if i == int(index) {
+								return []*JSON{e}
+							}
+						}
+					}
+				} else if paths == "" {
+					return []*JSON{
+						{
+							StringVal: stringify(elementAux),
+							BoolVal:   false,
+							ValueType: 6,
+						},
+					}
+				}
+			}
+		}
 	}
 	return []*JSON{
 		{
