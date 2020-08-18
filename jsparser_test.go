@@ -471,6 +471,22 @@ func TestGetAllNodes(t *testing.T) {
 	}
 }
 
+func TestGetNode(t *testing.T) {
+	file, _ := os.Open("sample.json")
+	br := bufio.NewReader(file)
+	data, _ := ioutil.ReadAll(br)
+	dataStr := `{"data":` + string(data) + "}"
+	br = bufio.NewReaderSize(bytes.NewReader([]byte(dataStr)), 65536)
+	p := NewJSONParser(br, "data")
+
+	for json := range p.Stream() {
+		node := json.GetNode("f.f1")
+		if node == nil {
+			t.Errorf("GetNode Node is nul")
+		}
+	}
+}
+
 func TestGetNodes(t *testing.T) {
 	var expected, found, path string
 	var index int
