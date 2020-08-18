@@ -471,6 +471,108 @@ func TestGetAllNodes(t *testing.T) {
 	}
 }
 
+func TestGetNodes(t *testing.T) {
+	var expected, found, path string
+	var index int
+	var node *JSON
+
+	file, _ := os.Open("sample.json")
+	br := bufio.NewReader(file)
+	data, _ := ioutil.ReadAll(br)
+	dataStr := `{"data":` + string(data) + "}"
+	br = bufio.NewReaderSize(bytes.NewReader([]byte(dataStr)), 65536)
+	p := NewJSONParser(br, "data")
+
+	for json := range p.Stream() {
+		path = "a"
+		nodes := json.GetNodes(path)
+		if len(nodes) != 7 {
+			t.Errorf("GetNodes %s doesn´t match with expected \n\t Expected: %d \n\t Found: %d", path, 7, len(nodes))
+		}
+
+		index = 0
+		path = "a11"
+		expected = "o71string\\"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		index = 0
+		path = "a12"
+		expected = "o72string"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		index = 0
+		path = "a13"
+		expected = "true"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		index = 1
+		path = "a12[1]"
+		expected = ""
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		index = 1
+		path = "a12[2]"
+		expected = "false"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		index = 2
+		path = "."
+		expected = "astringinside"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		index = 3
+		path = "."
+		expected = "false"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		index = 4
+		path = "."
+		expected = "99"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		index = 6
+		path = "."
+		expected = "433.33e-6"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+	}
+}
+
 func TestGetValue(t *testing.T) {
 	var found, expected, path string
 
