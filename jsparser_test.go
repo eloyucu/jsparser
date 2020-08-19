@@ -444,9 +444,6 @@ func TestInvalid(t *testing.T) {
 	}
 
 }
-func alokd(s string) {
-
-}
 
 func TestGetAllNodes(t *testing.T) {
 	file, _ := os.Open("sample.json")
@@ -482,9 +479,10 @@ func TestGetNode(t *testing.T) {
 	p := NewJSONParser(br, "data")
 
 	for json := range p.Stream() {
-		node := json.GetNode("f.f1")
+		path = "f.f1"
+		node := json.GetNode(path)
 		if node == nil {
-			t.Errorf("GetNode Node is nul")
+			t.Errorf("GetNode Node for path %s is nul", path)
 		} else {
 			path = "f11"
 			expected = "f11value"
@@ -495,9 +493,10 @@ func TestGetNode(t *testing.T) {
 			}
 		}
 
-		node = json.GetNode("o.o1")
+		path = "o.o1"
+		node = json.GetNode(path)
 		if node == nil {
-			t.Errorf("GetNode Node is nul")
+			t.Errorf("GetNode Node for path %s is nul", path)
 		} else {
 			path = "."
 			expected = "o1string"
@@ -506,6 +505,18 @@ func TestGetNode(t *testing.T) {
 				t.Errorf("GetNode %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
 
 			}
+		}
+
+		path = "nu"
+		node = json.GetNode(path)
+		if !node.IsEmpty() {
+			t.Errorf("GetNode Node for path %s is not Empty", path)
+		}
+
+		path = "not_exist"
+		node = json.GetNode(path)
+		if !node.IsEmpty() {
+			t.Errorf("GetNode Node for path %s is not Empty", path)
 		}
 	}
 }

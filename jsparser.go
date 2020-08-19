@@ -83,7 +83,6 @@ func (j *JsonParser) Parse() []*JSON {
 	return j.scratch.allRes()
 
 }
-
 func (element *JSON) GetAllNodes(xpath string) map[string]*JSON {
 	var path, paths string
 	xpaths := strings.SplitN(xpath, ".", 2)
@@ -145,9 +144,9 @@ func (element *JSON) GetNodes(xpath string) []*JSON {
 		for _, e := range element.ArrayVals {
 			if element, ok = e.(*JSON); ok {
 				elementAux = element.ObjectVals[path]
-				if element, ok = elementAux.(*JSON); ok {
+				if eAux, ok := elementAux.(*JSON); ok {
 					if paths == "" {
-						return []*JSON{element}
+						return []*JSON{eAux}
 					}
 					return element.GetNodes(paths)
 				} else if elements, ok := elementAux.([]*JSON); ok {
@@ -165,7 +164,7 @@ func (element *JSON) GetNodes(xpath string) []*JSON {
 						{
 							StringVal: stringify(elementAux),
 							BoolVal:   false,
-							ValueType: 6,
+							ValueType: element.ValueType,
 						},
 					}
 				}
@@ -182,7 +181,7 @@ func (element *JSON) GetNodes(xpath string) []*JSON {
 }
 func (element *JSON) GetNode(xpath string) *JSON {
 	nodes := element.GetNodes(xpath)
-	if len(nodes) > 0 {
+	if len(nodes) > 0 && nodes[0].ValueType != Null {
 		return nodes[0]
 	}
 	return &JSON{}
@@ -242,6 +241,12 @@ func (element *JSON) GetArrayVals(index int64) []*JSON {
 		}
 	}
 	return nodes
+}
+func (element *JSON) IsEmpty() bool {
+	if element == nil || (len(element.ArrayVals) == 0 && len(element.ObjectVals) == 0 && element.StringVal == "") {
+		return true
+	}
+	return false
 }
 func stringify(i interface{}) string {
 	if s, ok := i.(string); ok {
