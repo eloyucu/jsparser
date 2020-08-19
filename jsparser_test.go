@@ -525,6 +525,7 @@ func TestGetNodes(t *testing.T) {
 	var expected, found, path string
 	var index int
 	var node *JSON
+	var nodes []*JSON
 
 	file, _ := os.Open("sample.json")
 	br := bufio.NewReader(file)
@@ -535,7 +536,7 @@ func TestGetNodes(t *testing.T) {
 
 	for json := range p.Stream() {
 		path = "a"
-		nodes := json.GetNodes(path)
+		nodes = json.GetNodes(path)
 		if len(nodes) != 7 {
 			t.Errorf("GetNodes %s doesn´t match with expected \n\t Expected: %d \n\t Found: %d", path, 7, len(nodes))
 		}
@@ -619,6 +620,12 @@ func TestGetNodes(t *testing.T) {
 		found = node.GetValue(path)
 		if found != expected {
 			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
+
+		path = "f.f2"
+		nodes = json.GetNodes(path)
+		if len(nodes) != 0 {
+			t.Errorf("GetNodes %s doesn´t match with expected \n\t Expected: %d \n\t Found: %d", path, 0, len(nodes))
 		}
 	}
 }
