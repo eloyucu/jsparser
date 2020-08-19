@@ -627,6 +627,33 @@ func TestGetNodes(t *testing.T) {
 		if len(nodes) != 0 {
 			t.Errorf("GetNodes %s doesn´t match with expected \n\t Expected: %d \n\t Found: %d", path, 0, len(nodes))
 		}
+
+		path = "not_exist"
+		nodes = json.GetNodes(path)
+		if len(nodes) != 0 {
+			t.Errorf("GetNodes %s doesn´t match with expected \n\t Expected: %d \n\t Found: %d", path, 0, len(nodes))
+		}
+
+		path = "o.o8.o71"
+		nodes = json.GetNodes(path)
+		if len(nodes) != 0 {
+			t.Errorf("GetNodes %s doesn´t match with expected \n\t Expected: %d \n\t Found: %d", path, 0, len(nodes))
+		}
+
+		path = "o.o7.o72"
+		nodes = json.GetNodes(path)
+		if len(nodes) != 5 {
+			t.Errorf("GetNodes %s doesn´t match with expected \n\t Expected: %d \n\t Found: %d", path, 5, len(nodes))
+		}
+
+		index = 0
+		path = "."
+		expected = "o72string"
+		node = nodes[index]
+		found = node.GetValue(path)
+		if found != expected {
+			t.Errorf("Node index %d Path: %s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", index, path, expected, found)
+		}
 	}
 }
 
@@ -746,6 +773,12 @@ func TestGetValue(t *testing.T) {
 			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
 		}
 
+		expected = ""
+		path = "o.o8.o71"
+		found = json.GetValue(path)
+		if found != expected {
+			t.Errorf("%s doesn´t match with expected \n\t Expected: %s \n\t Found: %s", path, expected, found)
+		}
 	}
 
 }

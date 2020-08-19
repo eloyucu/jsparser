@@ -131,18 +131,10 @@ func (element *JSON) GetNodes(xpath string) []*JSON {
 			}
 		}
 		return e.GetNodes(paths)
-	} else if elements, ok := elementAux.([]*JSON); ok {
-		if paths == "" && index == 0 {
-			return elements
-		} else if paths == "" {
-			for i, e := range elements {
-				if i == int(index) {
-					return []*JSON{e}
-				}
-			}
-		}
-		return []*JSON{}
 	} else if path != "" {
+		if element.IsEmpty() {
+			return []*JSON{}
+		}
 		for _, e := range element.ArrayVals {
 			if element, ok = e.(*JSON); ok {
 				elementAux = element.ObjectVals[path]
@@ -172,6 +164,9 @@ func (element *JSON) GetNodes(xpath string) []*JSON {
 				}
 			}
 		}
+	}
+	if elementAux == nil || elementAux == "" {
+		return []*JSON{}
 	}
 	return []*JSON{
 		{
