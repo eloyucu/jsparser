@@ -112,6 +112,9 @@ func (element *JSON) GetNodes(xpath string) []*JSON {
 	path = xpaths[0]
 	path, index := element.pathIndex(path)
 
+	if element == nil {
+		return []*JSON{}
+	}
 	elementAux := element.ObjectVals[path]
 	if e, ok := elementAux.(*JSON); ok {
 		if paths == "" {

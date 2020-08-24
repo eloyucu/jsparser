@@ -481,7 +481,7 @@ func TestGetNode(t *testing.T) {
 	for json := range p.Stream() {
 		path = "f.f1"
 		node := json.GetNode(path)
-		if node == nil {
+		if node == nil || node.IsEmpty() {
 			t.Errorf("GetNode Node for path %s is nul", path)
 		} else {
 			path = "f11"
@@ -656,7 +656,6 @@ func TestGetNodes(t *testing.T) {
 		}
 	}
 }
-
 func TestGetValue(t *testing.T) {
 	var found, expected, path string
 
